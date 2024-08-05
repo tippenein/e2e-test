@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      clarinet_version:
+        description: 'Clarinet version to use'
+        required: true
+        default: 'v2.8.0'
+
+env:
+  CLARINET_VERSION: ${{ github.event.inputs.clarinet_version || 'v2.8.0' }}
 
 jobs:
   start-devnet:
@@ -16,7 +24,7 @@ jobs:
 
     - name: Install Clarinet
       run: |
-        wget -nv https://github.com/hirosystems/clarinet/releases/download/v2.8.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+        wget -nv https://github.com/hirosystems/clarinet/releases/download/${{ env.CLARINET_VERSION }}/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
         tar -xf clarinet-linux-x64.tar.gz
         chmod +x ./clarinet
         sudo mv ./clarinet /usr/local/bin
@@ -44,8 +52,6 @@ jobs:
         if [ -f devnet.pid ]; then
           if kill -0 $(cat devnet.pid) 2>/dev/null; then
             echo "Devnet process is running"
-            ps aux | grep clarinet
-            echo "Last 20 lines of devnet.log:"
             tail -n 20 devnet.log
           else
             echo "Devnet process is not running"
