@@ -22,4 +22,32 @@ jobs:
         sudo mv ./clarinet /usr/local/bin
 
     - name: Start Clarinet Devnet
-      run: clarinet devnet start
+      run: clarinet devnet start --no-dashboard --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
+           echo $! > devnet.pid
+           sleep 100  # Give the devnet some time to start up
+
+    - name: Check if Devnet is Running
+      run: |
+        if kill -0 $(cat devnet.pid) 2>/dev/null; then
+          echo "Devnet is running"
+          tail -n 20 devnet.log
+        else
+          echo "Devnet failed to start"
+          cat devnet.log
+          exit 1
+        fi
+
+    # Add your additional steps here that require the devnet to be running
+
+    - name: Stop Devnet
+      if: always()
+      run: |
+        if [ -f devnet.pid ]; then
+            if kill -0 $(cat devnet.pid) 2>/dev/null; then
+                kill $(cat devnet.pid)
+            else
+                echo "Devnet process not found"
+            fi
+        else
+            echo "devnet.pid file not found"
+        fi
