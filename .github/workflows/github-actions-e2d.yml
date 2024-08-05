@@ -35,7 +35,7 @@ jobs:
 
     - name: Start Clarinet Devnet in Background
       run: |
-        clarinet devnet start --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
+        clarinet devnet start --no-dashboard --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
         echo $! > devnet.pid
         sleep 10  # Give the devnet some time to start up
 
