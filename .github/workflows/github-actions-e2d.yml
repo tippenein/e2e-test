@@ -1,0 +1,25 @@
+name: e2e test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  start-devnet:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Clarinet
+      run: |
+        wget -nv https://github.com/hirosystems/clarinet/releases/download/v2.8.0/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+        tar -xf clarinet-linux-x64.tar.gz
+        chmod +x ./clarinet
+        sudo mv ./clarinet /usr/local/bin
+
+    - name: Start Clarinet Devnet
+      run: clarinet devnet start
