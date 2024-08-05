@@ -20,20 +20,42 @@ jobs:
         tar -xf clarinet-linux-x64.tar.gz
         chmod +x ./clarinet
         sudo mv ./clarinet /usr/local/bin
+        clarinet --version
 
-    - name: Start Clarinet Devnet
-      run: clarinet devnet start --no-dashboard --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
-           echo $! > devnet.pid
-           sleep 100  # Give the devnet some time to start up
+    - name: Check Clarinet.toml location
+      run: |
+        ls -R ${{ github.workspace }}
+        if [ -f "${{ github.workspace }}/Clarinet.toml" ]; then
+          echo "Clarinet.toml found in workspace root"
+          cat "${{ github.workspace }}/Clarinet.toml"
+        else
+          echo "Clarinet.toml not found in workspace root"
+          find ${{ github.workspace }} -name Clarinet.toml
+        fi
+
+    - name: Start Clarinet Devnet in Background
+      run: |
+        clarinet devnet start --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
+        echo $! > devnet.pid
+        sleep 10  # Give the devnet some time to start up
 
     - name: Check if Devnet is Running
       run: |
-        if kill -0 $(cat devnet.pid) 2>/dev/null; then
-          echo "Devnet is running"
-          tail -n 20 devnet.log
+        if [ -f devnet.pid ]; then
+          if kill -0 $(cat devnet.pid) 2>/dev/null; then
+            echo "Devnet process is running"
+            ps aux | grep clarinet
+            echo "Last 20 lines of devnet.log:"
+            tail -n 20 devnet.log
+          else
+            echo "Devnet process is not running"
+            echo "Contents of devnet.log:"
+            cat devnet.log
+            exit 1
+          fi
         else
-          echo "Devnet failed to start"
-          cat devnet.log
+          echo "devnet.pid file not found"
+          ls -l
           exit 1
         fi
 
@@ -43,11 +65,12 @@ jobs:
       if: always()
       run: |
         if [ -f devnet.pid ]; then
-            if kill -0 $(cat devnet.pid) 2>/dev/null; then
-                kill $(cat devnet.pid)
-            else
-                echo "Devnet process not found"
-            fi
+          if kill -0 $(cat devnet.pid) 2>/dev/null; then
+            kill $(cat devnet.pid)
+            echo "Devnet stopped"
+          else
+            echo "Devnet process not found"
+          fi
         else
-            echo "devnet.pid file not found"
+          echo "devnet.pid file not found"
         fi
