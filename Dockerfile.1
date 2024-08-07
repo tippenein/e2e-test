@@ -1,0 +1,33 @@
+FROM --platform=$BUILDPLATFORM ubuntu:latest
+
+ARG TARGETARCH
+ARG CLARINET_VERSION=v2.8.0
+ENV CLARINET_VERSION=${CLARINET_VERSION}
+
+RUN apt-get update && apt-get install -y \
+    wget \
+    tar \
+    docker.io \
+    qemu-user-static \
+    binfmt-support \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        apt-get update && apt-get install -y libc6-amd64-cross && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+RUN wget -nv https://github.com/hirosystems/clarinet/releases/download/${CLARINET_VERSION}/clarinet-linux-x64-glibc.tar.gz -O clarinet.tar.gz && \
+    tar -xzf clarinet.tar.gz && \
+    chmod +x ./clarinet && \
+    mv ./clarinet /usr/local/bin && \
+    rm clarinet.tar.gz
+
+WORKDIR /app
+
+COPY Clarinet.toml .
+COPY settings/Devnet.toml ./settings/
+COPY start.sh .
+
+RUN chmod +x start.sh
+
+CMD ["/app/start.sh"]

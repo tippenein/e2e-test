@@ -30,17 +30,6 @@ jobs:
         sudo mv ./clarinet /usr/local/bin
         clarinet --version
 
-    - name: Check Clarinet.toml location
-      run: |
-        ls -R ${{ github.workspace }}
-        if [ -f "${{ github.workspace }}/Clarinet.toml" ]; then
-          echo "Clarinet.toml found in workspace root"
-          cat "${{ github.workspace }}/Clarinet.toml"
-        else
-          echo "Clarinet.toml not found in workspace root"
-          find ${{ github.workspace }} -name Clarinet.toml
-        fi
-
     - name: Start Clarinet Devnet in Background
       run: |
         clarinet devnet start --no-dashboard --manifest-path ${{ github.workspace }}/Clarinet.toml > devnet.log 2>&1 &
@@ -55,17 +44,15 @@ jobs:
             tail -n 20 devnet.log
           else
             echo "Devnet process is not running"
-            echo "Contents of devnet.log:"
             cat devnet.log
             exit 1
           fi
         else
           echo "devnet.pid file not found"
-          ls -l
           exit 1
         fi
 
-    # Add your additional steps here that require the devnet to be running
+    # Run tests here
 
     - name: Stop Devnet
       if: always()
