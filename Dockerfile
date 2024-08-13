@@ -18,13 +18,21 @@ FROM --platform=$BUILDPLATFORM ubuntu:latest
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     docker.io \
+    sudo \
+    net-tools \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/*
+RUN usermod -aG docker root
+
+
 
 COPY --from=builder /usr/src/clarinet/target/release/clarinet /usr/local/bin/clarinet
 
 WORKDIR /app
+VOLUME /var/run/docker.sock
 
-# Copy Clarinet configuration files
+
+# Copy Clarinet config files
 COPY Clarinet.toml .
 COPY settings/Devnet.toml ./settings/
 COPY start.sh .

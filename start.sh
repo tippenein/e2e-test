@@ -12,5 +12,9 @@ docker network ls
 echo "Existing containers:"
 docker ps -a
 
+
+netstat -tuln | grep 18443
+netstat -tuln | grep 18453
+
 # Start Clarinet devnet
 clarinet devnet start --no-dashboard --manifest-path /app/Clarinet.toml
